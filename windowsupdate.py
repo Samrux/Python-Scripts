@@ -20,13 +20,14 @@ def check_setting():
                 noautoupdate = False
 
             if noautoupdate:
-                print('Your machine is on setting "1"')
+                auoption = 1
             else:
                 auoption = QueryValueEx(key, AUOptions)[0]
-                if 2 <= auoption <= 4:
-                    print('Your machine is on setting "%i"' % auoption)
-                else:
-                    print('Your machine is on an unrecognized setting')
+
+            if 1 <= auoption <= 4:
+                print(f'Your machine is on setting "{auoption}"')
+            else:
+                print('Your machine is on an unrecognized setting')
 
     except FileNotFoundError:  # If either the key or AUOptions doesn't exist
         print('Your machine is on the default setting ("0")')
