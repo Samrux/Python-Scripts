@@ -67,12 +67,16 @@ def main():
     print('2 -> Notify before download and install')
     print('3 -> Auto download and notify for install')
     print('4 -> Auto download and schedule the install')
-    print('check -> See which configuration is selected on your machine.\n')
+    print('check -> See which configuration is active in your machine.')
+    print('exit -> Close this program')
+    print()
 
     while True:
         choice = input('Enter your choice: ')
         if choice == 'check':
             check_setting()
+        elif choice == 'exit':
+            break
         else:
             try:
                 choice = int(choice)
@@ -85,9 +89,9 @@ def main():
             except Exception:
                 print('\nSorry. The process failed through the following unhandled exception:')
                 printexception()
-            break
 
-    input('Press any key to exit...')
+            input('Press any key to exit...')
+            break
 
 
 if __name__ == '__main__':
