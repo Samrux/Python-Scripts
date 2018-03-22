@@ -61,7 +61,7 @@ def set_setting(s):
 
 
 def main():
-    print('Windows Update configuration (Windows 10 Pro and up)\n')
+    print('Windows Update configuration editor for Windows 10\n')
     print('0 -> As guided by the Windows Update app (default)')
     print('1 -> Never check for updates')
     print('2 -> Notify before download and install')
