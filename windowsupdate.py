@@ -1,9 +1,10 @@
-from winreg import *
+from winreg import OpenKey, CreateKeyEx, DeleteKeyEx, QueryValueEx, SetValueEx
+from winreg import HKEY_LOCAL_MACHINE, KEY_READ, KEY_ALL_ACCESS, REG_DWORD
 from traceback import print_exc as printexception
 
 
-WindowsUpdate = r"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
-AU = WindowsUpdate + r"\AU"
+WindowsUpdate = "SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
+AU = WindowsUpdate + "\AU"
 
 NoAutoUpdate = 'NoAutoUpdate'
 AUOptions = 'AUOptions'
@@ -13,7 +14,7 @@ ScheduledInstallTime = 'ScheduledInstallTime'
 
 def check_setting():
     try:
-        with OpenKeyEx(HKEY_LOCAL_MACHINE, AU, 0, KEY_READ) as key:
+        with OpenKey(HKEY_LOCAL_MACHINE, AU, 0, KEY_READ) as key:
             try:
                 noautoupdate = QueryValueEx(key, NoAutoUpdate)[0]
             except FileNotFoundError:
@@ -55,9 +56,9 @@ def set_setting(s):
                 SetValueEx(key, 'ScheduledInstallTime', 0, REG_DWORD, 3)
 
     except PermissionError:
-        print('\nPermission denied. Please run this program as Administrator.')
+        print('Permission denied. Please run this program as Administrator.')
     else:
-        print('\nWindows Update settings changed successfully.')
+        print('Windows Update settings changed successfully.')
 
 
 def main():
@@ -84,10 +85,11 @@ def main():
             except (ValueError, AssertionError):
                 continue
 
+            print()
             try:
                 set_setting(choice)
             except Exception:
-                print('\nSorry. The process failed through the following unhandled exception:')
+                print('Sorry. The process failed through the following unhandled exception:')
                 printexception()
 
             input('Press any key to exit...')
