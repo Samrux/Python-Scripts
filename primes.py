@@ -1,14 +1,11 @@
-from math import sqrt, floor
-
-
 exit_keywords = ('cancel', 'close', 'exit', 'break')
 
 
 def is_prime(num):
-    if num < 2 or isinstance(num, float) and num != floor(num):
+    if num < 2 or num != int(num):
         return False
 
-    for i in range(2, floor(sqrt(num)) + 1):
+    for i in range(2, int(num**0.5 + 1)):
         if num % i == 0:
             return False
     return True
