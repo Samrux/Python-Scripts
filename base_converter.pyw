@@ -19,7 +19,7 @@ def tobase(num: int, base: int) -> str:
 
 def frombase(num: str, base: int) -> int:
     """Converts a string from a given base into a base-10 number"""
-    return sum([glyphs.find(num[-1-n]) * base**n for n in range(len(num))])
+    return sum(glyphs.find(num[-1-n]) * base**n for n in range(len(num)))
 
 
 def convertbase(num: str, base1: int, base2: int) -> str:
@@ -28,7 +28,7 @@ def convertbase(num: str, base1: int, base2: int) -> str:
         num = num.upper()
 
     assert 2 <= base1 <= len(glyphs) and 2 <= base2 <= len(glyphs), BASEERROR
-    assert all([x in glyphs and glyphs.find(x) < base1 for x in num]), NUMBERERROR
+    assert all(x in glyphs and glyphs.find(x) < base1 for x in num), NUMBERERROR
 
     if base1 == 10 and base2 == 10:
         return num
