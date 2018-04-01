@@ -1,58 +1,89 @@
-def columnize(lst, amount, padding=1, padchar=' ', align='left') -> str:
+from math import ceil
+
+LEFT = 'l'
+RIGHT = 'r'
+CENTER = 'c'
+
+LeftAlign = ('left', 'l', '', None)
+RightAlign = ('right', 'r')
+CenterAlign = ('center', 'c')
+
+
+def columnize(lst: iter, ncolumns: int,
+              align: str=LEFT, vertical: bool=False,
+              padding: int=1, padchar: str=' ') -> str:
     """Takes an iterable and returns a string with the items organized in
-    columns, left-to-right top-to-bottom.
+    columns. Left alignment and left-to-right order by default.
     """
 
-    lst = [str(x) for x in lst]  # Convert to list of strings
+    if ncolumns < 0 or padding < 0:
+        raise ValueError('Negative padding or number of columns')
+    if align not in LeftAlign + RightAlign + CenterAlign:
+        raise ValueError('Invalid alignment')
 
-    if amount < 1:
-        return ''
-    elif amount == 1:
-        return '\n'.join(lst)
+    if ncolumns == 0 or not lst: return ''
 
-    lst += [''] * (amount-(len(lst) % amount))  # Fill empty slots
+    lst = [str(x) for x in lst]
+
+    if ncolumns == 1: return '\n'.join(lst)
+
+    # Add items so the length of the list is divisible by ncolumns
+    if len(lst) % ncolumns > 0:
+        lst += [''] * (ncolumns - (len(lst) % ncolumns))
+
     width = max(len(x) for x in lst) + padding
+    nrows = len(lst) // ncolumns
 
-    # Organize data into sublists of length 'amount'
+    # Organize data into rows
     rows = []
-    for i in range(0, len(lst), amount):
-        group = []
-        for j in range(amount):
-            group.append(lst[i+j])
-        rows.append(group)
+    for i in range(nrows):
+        row = []
+        for j in range(ncolumns):
+            if vertical:
+                row.append(lst[i + nrows * j])
+            else:
+                row.append(lst[ncolumns * i + j])
+        rows.append(row)
 
-    # Make columns
-    result = ''
-    for group in rows:
-        for item in group:
+    # Make indented and justified strings out of those rows
+    stringrows = []
+    for row in rows:
+        rowstr = ''
+        for item in row:
             pad = padchar * (width - len(item))
-            if align in ('right', 'r'):
+            if align in RightAlign:
                 algnitem = pad + item
-            elif align in ('center', 'c'):
-                algnitem = pad[:len(pad)//2] + item + pad[len(pad)//2:]
+            elif align in CenterAlign:
+                cut = ceil(len(pad) // 2)
+                algnitem = pad[:cut] + item + pad[cut:]
             else:
                 algnitem = item + pad
-            result += algnitem
+            rowstr += algnitem
+        stringrows.append(rowstr)
 
-        result += '\n'
-
-    return result
+    return '\n'.join(stringrows)
 
 
+# Examples
 if __name__ == '__main__':
-    from random import sample, randint, uniform as randfloat
 
+    roots = [round(x**0.5, 5) for x in range(70, 120)]
+
+    # Columnize numbers, right-aligned
+    print('\n' + columnize(roots, 5, align='right'))
+
+    # Align to period using format()
+    print('\n' + columnize(["{:7.4f}".format(x) for x in roots], 5, padding=2))
+
+
+    # Names in credits style
     names = ['Akexus', 'Akrytael', 'Albinos', 'Aren', 'Atlahika', 'Cybershell12',
              'Dae', 'Darky', 'Dja', 'Dotare', 'E-crafter', 'Eli', 'Faye',
-             'Felvine', 'Fluffy', 'Frykas', 'Félinx', 'GabNagi', 'Gaiko',
+             'Felvine', 'Fluffy', 'Frykas', 'Felinx', 'GabNagi', 'Gaiko',
              'Hdi64', 'Heddy', 'Heliander', 'Hueco', 'Jlaime', "Ju'", 'Julie',
              'Kitty', 'Kurybat', 'LaGeek', 'Lagartha', 'Laukhlass', 'Luomi',
              'Magicarpe', 'Maxime62', 'Microman', 'Nataire', 'Oulumor', 'Pikalou',
-             'Pixocode', 'Ryouh', 'Seth', 'Shisõka', 'Skoyatt', 'Stefstef',
+             'Pixocode', 'Ryouh', 'Seth', 'Shisoka', 'Skoyatt', 'Stefstef',
              'Tonitch', 'Topy', 'Tsumyane', 'Vayan', 'Yoshi24', 'Zood']
 
-    nums = map(lambda _: round(randfloat(0, 1), randint(2, 7)), [None]*64)
-
-    print('EXAMPLE 1:\n' + columnize(sample(names, 30), 4))
-    print('EXAMPLE 2:\n' + columnize(names, 7, align='center'))
-    print('EXAMPLE 3:\n' + columnize(nums, 6, align='r', padding=2))
+    print('\n' + columnize(names, 3, align='center', vertical=True))
