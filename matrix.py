@@ -1,6 +1,5 @@
 from math import isclose
 from itertools import chain
-from numbers import Number
 
 
 class Matrix:
@@ -16,7 +15,7 @@ class Matrix:
         - Prettified string representation
     """
     
-    def __init__(self, rows: iter):
+    def __init__(self, rows):
         """Creates a new matrix from an iterable of iterables"""
         if len(rows) == 0 or len(rows[0]) == 0:
             self._list = []
@@ -60,7 +59,7 @@ class Matrix:
             raise ValueError('The two matrices must have equal dimensions')
         return self.fill(lambda r, c: self[r, c]+other[r, c])
                 
-    def __imul__(self, k: Number) -> 'Matrix':
+    def __imul__(self, k) -> 'Matrix':
         """*= perator: In-place matrix scalar multiplication"""
         return self.fill(lambda r, c: self[r, c]*k)
         
@@ -100,16 +99,19 @@ class Matrix:
         return Matrix.raw([[self[i, j] for j in range(self.columns) if j not in delc]
                            for i in range(self.rows) if i not in delr])
 
-    def determinant(self) -> Number:
+    def determinant(self):
         """Obtain the determinant of this matrix recursively"""
         if not self.is_square:
             raise ValueError('A non-square matrix has no determinant')
-        if self.size == (2, 2):
+
+        if self.rows == 1:
+            return self[0, 0]
+        elif self.rows == 2:
             return self[0, 0] * self[1, 1] - self[0, 1] * self[1, 0]
         else:
             return sum(self[0, c] * self.minor(0, c) * (-1)**(c%2) for c in range(self.columns))
 
-    def minor(self, r, c) -> Number:
+    def minor(self, r, c):
         """Obtains a minor of this matrix for the given row and column recursively"""
         return self.submatrix([r], [c]).determinant()
 
@@ -117,29 +119,24 @@ class Matrix:
         """Creates the transpose of this matrix, which is flipped along its diagonal"""
         return Matrix.zero(self.columns, self.rows).fill(lambda r, c: self[c, r])
 
-    def cofactor(self) -> 'Matrix':
-        """Creates the cofactor of this matrix, whose elements have alternating signs"""
-        return Matrix.zero(*self.size).fill(lambda r, c: self[r, c] * (-1)**((r+c)%2))
-
     def adjugate(self) -> 'Matrix':
-        """Creates the adjugate of this matrix, which is the transpose of its cofactor"""
-        return self.cofactor().transpose()
+        """Creates the adjugate of this matrix, which is its inverse times the determinant"""
+        adj = Matrix.zero(*self.size).fill(lambda r, c: self.minor(r, c))  # Matrix of minors
+        adj = adj.fill(lambda r, c: adj[r, c] * (-1)**((r+c)%2)).transpose()
+        return adj
 
     def inverse(self) -> 'Matrix':
         """Creates the multiplicative inverse of this matrix"""
         det = self.determinant() if self.is_square else 0
-        if det == 0:
-            return None
-        minors = Matrix.zero(*self.size).fill(lambda r, c: self.minor(r, c))
-        return minors.adjugate() * (1/det)
+        return None if det == 0 else self.adjugate() * (1/det)
 
-    def rowadd(self, i: int, j: int, k: Number = 1) -> 'Matrix':
+    def rowadd(self, i: int, j: int, k=1) -> 'Matrix':
         """Adds row j times k to row i in this matrix"""
         for c in range(self.columns):
             self[i, c] += self[j, c] * k
         return self
 
-    def rowmult(self, i: int, k: Number) -> 'Matrix':
+    def rowmult(self, i: int, k) -> 'Matrix':
         """Multiplies row i by k in this matrix"""
         for c in range(self.columns):
             self[i, c] *= k
@@ -211,7 +208,7 @@ class Matrix:
     @property
     def is_identity(self) -> bool:
         """Whether this matrix is an identity matrix"""
-        return all(isclose(self[r, c], 1 if r == c else 0) for r, c in self.all_positions())
+        return all(isclose(self[r, c], 1 if r == c else 0, abs_tol=1e-12) for r, c in self.all_positions())
 
     @property
     def is_echelon(self) -> bool:
@@ -340,14 +337,16 @@ if __name__ == '__main__':
                  (0, 2, 1, 4, 0),
                  (0, 0, 0, 3, 0)))
 
-    print('<<< Matrix demo >>>\nThis implementation was made for study, experimentation and fun\n')
+    help(Matrix)
+    print()
+    print('---------- Matrix demo ----------\nThis implementation was made for study, experimentation and fun\n')
     print(f'M1\n{M1}')
     print(f' M1[0, 1]: {M1[0, 1]}')
     print(f'M1^T\n{M1.transpose()}')
     print()
     print(f'M2\n{M2}')
-    print(f'M2^-1\n{M2.inverse()}')  # Notice there's more than 1 way to get the inverse
-    print(f'M2 x M2^-1\n{M2 @ M2**-1}')
+    print(f'M2^-1\n{M2.inverse()}')
+    print(f'M2 x M2^-1\n{M2 @ M2**-1}')  # Notice there's more than one way to write the inverse
     print(f' is_identity: {(M2 @ M2**-1).is_identity}')
     print()
     print(f'M3\n{M3}')
@@ -356,6 +355,3 @@ if __name__ == '__main__':
     print(f'E(i=2, j=0, k=2) x M3\n{M3.copy().elem(i=2, j=0, k=2)}')
     print()
     print(f'M2 * 2 @ M3\n{M2 * 2 @ M3}')
-
-
-
