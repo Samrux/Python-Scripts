@@ -1,26 +1,23 @@
-from math import isclose
-from itertools import chain
-
-
 class Matrix:
     """Defines 2D matrices and many common operations with and between them.
-    Includes:
-        - Zero, Identity and Elementary matrices
-        - Matrix addition and multiplication, exponentiation, and scalar multiplication
-        - Elementary row operations (swapping, multiplication, addition)
-        - Matrix determinant and minors
-        - Transpose, Adjugate and Inverse matrices
-        - Fill and copy operations
-        - Submatrices through either index slicing or row/column deletion
-        - Prettified string representation
+    This is a self-educational implementation made in pure Python, without imports.
+    Features:
+      - Zero, Identity and Elementary matrices
+      - Matrix addition and multiplication, exponentiation, and scalar multiplication
+      - Elementary row operations (swapping, multiplication, addition)
+      - Matrix determinant and minors
+      - Transpose, Adjugate and Inverse matrices
+      - Fill and copy operations
+      - Submatrices through either index slicing or row/column deletion
+      - Prettified string representation
     """
-    
+
     def __init__(self, rows):
         """Creates a new matrix from an iterable of iterables"""
         if len(rows) == 0 or len(rows[0]) == 0:
             self._list = []
         else:
-            self._list = Matrix.zero(len(rows), len(rows[0]))._list
+            self._list = [[None]*len(rows[0]) for _ in range(len(rows))]
             self.fill(lambda r, c: rows[r][c])
 
     @classmethod
@@ -42,44 +39,43 @@ class Matrix:
         for i in range(n):
             matrix[i, i] = 1
         return matrix
-        
+
     @classmethod
-    def elementary(cls, n: int, **kwargs) -> 'Matrix':        
+    def elementary(cls, n: int, **kwargs) -> 'Matrix':
         """Creates an elementary matrix of size n, which is an identity matrix affected by a row operation.
         Keyword arguments: i,j for row swapping; i,k for row multiplication; i,j,k for row addition.
         """
         return Matrix.identity(n).ielem(**kwargs)
 
-
     # Operations
-        
+
     def __iadd__(self, other: 'Matrix') -> 'Matrix':
         """+= operator: In-place matrix per-element addition"""
         if self.size != other.size:
             raise ValueError('The two matrices must have equal dimensions')
-        return self.fill(lambda r, c: self[r, c]+other[r, c])
-                
+        return self.fill(lambda r, c: self[r, c] + other[r, c])
+
     def __imul__(self, k) -> 'Matrix':
-        """*= perator: In-place matrix scalar multiplication"""
-        return self.fill(lambda r, c: self[r, c]*k)
-        
+        """*= operator: In-place matrix scalar multiplication"""
+        return self.fill(lambda r, c: self[r, c] * k)
+
     def __add__(self, other) -> 'Matrix':
-        """+ operator: Matrix per-element addition saved as new matrix"""
+        """+ operator: Matrix per-element addition"""
         return self.copy().__iadd__(other)
 
     def __mul__(self, k) -> 'Matrix':
-        """* operator: Matrix scalar multiplication, saved as new matrix"""
+        """* operator: Matrix scalar multiplication"""
         return self.copy().__imul__(k)
 
     def __matmul__(self, other: 'Matrix') -> 'Matrix':
-        """@ operator: Matrix multiplication, saved as new matrix"""
+        """@ operator: Matrix multiplication"""
         if self.columns != other.rows:
             raise ValueError('The first matrix must have as many columns as the second has rows')
-        return Matrix.zero(self.rows, other.columns)\
+        return Matrix.zero(self.rows, other.columns) \
             .fill(lambda r, c: sum(self[r, i]*other[i, c] for i in range(other.rows)))
 
     def __pow__(self, p: int) -> 'Matrix':
-        """** operator: Matrix exponentiation (negative powers use the inverse), saved as new matrix"""
+        """** operator: Matrix exponentiation (negative powers use the inverse)"""
         if not self.is_square and p not in (+1, -1):
             raise ValueError("Can't raise a non-square matrix")
         if p == 0:
@@ -112,11 +108,11 @@ class Matrix:
             return sum(self[0, c] * self.minor(0, c) * (-1)**(c%2) for c in range(self.columns))
 
     def minor(self, r, c):
-        """Obtains a minor of this matrix for the given row and column recursively"""
+        """Obtains the minor of this matrix for the given row and column recursively"""
         return self.submatrix([r], [c]).determinant()
 
     def transpose(self) -> 'Matrix':
-        """Creates the transpose of this matrix, which is flipped along its diagonal"""
+        """Creates the transpose of this matrix, which is flipped along its main diagonal"""
         return Matrix.zero(self.columns, self.rows).fill(lambda r, c: self[c, r])
 
     def adjugate(self) -> 'Matrix':
@@ -128,7 +124,7 @@ class Matrix:
     def inverse(self) -> 'Matrix':
         """Creates the multiplicative inverse of this matrix"""
         det = self.determinant() if self.is_square else 0
-        return None if det == 0 else self.adjugate() * (1/det)
+        return None if det == 0 else self.adjugate() * (1 / det)
 
     def rowadd(self, i: int, j: int, k=1) -> 'Matrix':
         """Adds row j times k to row i in this matrix"""
@@ -147,7 +143,7 @@ class Matrix:
         for c in range(self.columns):
             self[i, c], self[j, c] = self[j, c], self[i, c]
         return self
-        
+
     def elem(self, **kwargs) -> 'Matrix':
         """Returns a new matrix that differs from this one by an elementary row operation.
         Arguments: i,j for swapping; i,k for multiplication; i,j,k for addition.
@@ -169,22 +165,21 @@ class Matrix:
         else:
             return self.rowswap(i, j) if k is None else self.rowadd(i, j, k)
 
-
     # Properties
-    
+
     @property
     def rows(self) -> int:
-        """Number of rows in this matrix"""
+        """Amount of rows in this matrix"""
         return len(self._list)
-    
+
     @property
     def columns(self) -> int:
-        """Number of columns in this matrix"""
+        """Amount of columns in this matrix"""
         return len(self._list[0])
-        
+
     @property
     def size(self) -> tuple:
-        """Numbers of rows and columns in this matrix"""
+        """Amounts of rows and columns in this matrix"""
         return self.rows, self.columns
 
     @property
@@ -197,24 +192,18 @@ class Matrix:
         """Whether this matrix can be inverted. Alternatively,
         you can check whether inverse() returns something other than None
         """
-        return not self.is_square or self.determinant == 0
-
-    @property
-    def is_singular(self) -> bool:
-        """Whether this matrix is not invertible. Alternatively,
-        you can check whether inverse() returns None"""
-        return not self.is_invertible
+        return self.is_square and self.determinant() != 0
 
     @property
     def is_identity(self) -> bool:
         """Whether this matrix is an identity matrix"""
-        return all(isclose(self[r, c], 1 if r == c else 0, abs_tol=1e-12) for r, c in self.all_positions())
+        return all(abs(self[r, c] - (1 if r == c else 0)) < 1e-12 for r, c in self.all_positions())
 
     @property
     def is_echelon(self) -> bool:
         """Whether this matrix is in row echelon form"""
         zero_row = False
-        for r in range(self.rows-1):
+        for r in range(self.rows - 1):
             for c in range(self.columns):
                 if self[r, c] != 0:  # First
                     if zero_row or self[r+1, c] != 0:
@@ -224,40 +213,40 @@ class Matrix:
                 zero_row = True
         return True
 
-
     # Other methods
-        
+
     def row(self, i: int) -> tuple:
         """Returns all elements in a given row"""
         return tuple(self[i, c] for c in range(self.columns))
-    
+
     def column(self, j: int) -> tuple:
         """Returns all elements in a given column"""
         return tuple(self[r, j] for r in range(self.rows))
 
     def diagonal(self) -> tuple:
-        """Returns the elements of this matrix along its diagonal"""
+        """Returns the elements of this matrix along its main diagonal"""
         return tuple(self[i, i] for i in range(min(self.rows, self.columns)))
 
     def all_positions(self):
         """Returns all (i,j) positions in this matrix"""
-        return chain.from_iterable(((r, c) for r in range(self.rows)) for c in range(self.columns))
-    
+        for r in range(self.rows):
+            for c in range(self.columns):
+                yield (r, c)
+
     def fill(self, func) -> 'Matrix':
         """Fills the matrix using a function as a value"""
         for r in range(self.rows):
             for c in range(self.columns):
                 self[r, c] = func(r, c)
         return self
-        
+
     def copy(self) -> 'Matrix':
         """Creates a copy of this matrix"""
         new = Matrix.zero(*self.size)
         return new.fill(lambda r, c: self[r, c])
 
-
     # Other magic methods
-    
+
     def __getitem__(self, pos: iter):
         """Obtain an element at a position given by (row, column)
         or a submatrix on a slice given by (start:end, start:end)
@@ -278,15 +267,16 @@ class Matrix:
             if jstop is None: jstop = self.columns
             elif jstop < 0: jstop += self.columns
 
-            rows = istop-istart
-            columns = jstop-jstart
+            rows = istop - istart
+            columns = jstop - jstart
             if rows < 1 or columns < 1:
                 return Matrix([])
-            return Matrix.zero(rows, columns).fill(lambda r, c: self[istart+r, jstart+c])
-        
+
+            return Matrix.zero(rows, columns).fill(lambda r, c: self[istart + r, jstart + c])
+
         else:
             return self._list[i][j]
-        
+
     def __setitem__(self, pos: iter, val):
         """Set an element at a position given by (row, column)"""
         i, j = pos
@@ -326,6 +316,8 @@ class Matrix:
 
 
 if __name__ == '__main__':
+    help(Matrix)
+
     M1 = Matrix(((4, 6),
                  (3, 8)))
 
@@ -337,9 +329,7 @@ if __name__ == '__main__':
                  (0, 2, 1, 4, 0),
                  (0, 0, 0, 3, 0)))
 
-    help(Matrix)
-    print()
-    print('---------- Matrix demo ----------\nThis implementation was made for study, experimentation and fun\n')
+    print('\n--------< Matrix class demo >--------\n')
     print(f'M1\n{M1}')
     print(f' M1[0, 1]: {M1[0, 1]}')
     print(f'M1^T\n{M1.transpose()}')
