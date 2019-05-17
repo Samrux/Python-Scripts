@@ -48,12 +48,12 @@ def set_setting(s):
 
         with OpenKey(HKEY_LOCAL_MACHINE, AU, 0, KEY_ALL_ACCESS) as key:
             if s == 1:
-                SetValueEx(key, 'NoAutoUpdate', 0, REG_DWORD, 1)
+                SetValueEx(key, NoAutoUpdate, 0, REG_DWORD, 1)
             elif s != 0:
-                SetValueEx(key, 'NoAutoUpdate', 0, REG_DWORD, 0)
-                SetValueEx(key, 'AUOptions', 0, REG_DWORD, s)
-                SetValueEx(key, 'ScheduledInstallDay', 0, REG_DWORD, 6)
-                SetValueEx(key, 'ScheduledInstallTime', 0, REG_DWORD, 3)
+                SetValueEx(key, NoAutoUpdate, 0, REG_DWORD, 0)
+                SetValueEx(key, AUOptions, 0, REG_DWORD, s)
+                SetValueEx(key, ScheduledInstallDay, 0, REG_DWORD, 6)
+                SetValueEx(key, ScheduledInstallTime, 0, REG_DWORD, 3)
 
     except PermissionError:
         print('Permission denied. Please run this program as Administrator.')
